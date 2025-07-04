@@ -270,7 +270,8 @@
       }
 
       if (nextData && nextData.released) {
-        createWeekSection("Next Week (Editable)", Object.keys(nextData.state || {}).length ? nextData.state : {"0": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "1": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "2": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "3": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "4": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}}, true);
+        nextWeekState = Object.keys(nextData.state || {}).length ? nextData.state : {"0": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "1": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "2": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "3": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "4": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}};
+createWeekSection("Next Week (Editable)", nextWeekState, Object.keys(nextData.state || {}).length ? nextData.state : {"0": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "1": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "2": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "3": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}, "4": {"In Office": ["Joe Bungey", "Jeni Jones", "Phil Boshier", "Daniela Kent", "Gregg Raven", "Oscar Dixon-Barrow", "Jack Perks", "Elaine Connell", "Martha Cumiskey", "Matt Owen", "Charlotte Berrow", "Hannah Lawry", "Molly McGuire", "Ben McKenna-Smith", "Ben Hackston", "Summer Bolitho"], "Working from Home": [], "On Annual Leave": []}}, true);
         document.getElementById("message").textContent =
           nextData.bankHoliday
             ? "⚠️ No WFH allowed next week due to a bank holiday."
@@ -360,7 +361,45 @@
       return d.getUTCFullYear() + "-W" + String(weekNum).padStart(2, "0");
     }
 
-    loadBothWeeks();
+    
+let nextWeekState = {};
+
+function moveCard(day, column, name) {
+  const onLeave = Object.values(nextWeekState).some(dayData =>
+    (dayData["On Annual Leave"] || []).includes(name)
+  );
+  if (onLeave) {
+    alert("❌ You cannot book WFH in a week where you are on annual leave.");
+    return;
+  }
+  if (nextData.bankHoliday || (nextData.mandatoryOfficeDays || []).includes(day)) {
+    alert("❌ You cannot book WFH on a restricted day.");
+    return;
+  }
+  const wfhCount = (nextWeekState[day]["Working from Home"] || []).length;
+  const alreadyWFH = Object.values(nextWeekState).some(dayData =>
+    (dayData["Working from Home"] || []).includes(name)
+  );
+  if (column === "Working from Home") {
+    if (wfhCount >= 3) {
+      alert("⚠️ Only 3 people can work from home per day.");
+      return;
+    }
+    if (alreadyWFH) {
+      alert("⚠️ You can only book one WFH day per week.");
+      return;
+    }
+  }
+
+  columns.forEach(col => {
+    nextWeekState[day][col] = (nextWeekState[day][col] || []).filter(p => p !== name);
+  });
+  nextWeekState[day][column].push(name);
+  db.collection("boards").doc(weekKeys[1]).update({ state: nextWeekState });
+  loadBothWeeks();
+}
+
+loadBothWeeks();
     
   </script>
 </body>
