@@ -7,8 +7,21 @@
   <title>WFH Kanban Board</title>
   <style>
     body { font-family: sans-serif; padding: 2rem; }
-    h1 { margin-bottom: 2rem; }
-    .day { margin-bottom: 2rem; }
+    h1 { margin-bottom: 1rem; }
+    .tabs { display: flex; gap: 1rem; margin-bottom: 1rem; }
+    .tab-button {
+      padding: 0.5rem 1rem;
+      background: #eee;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .tab-button.active {
+      background: #ddd;
+      font-weight: bold;
+    }
+    .day-container { display: none; }
+    .day-container.active { display: block; }
     .columns { display: flex; gap: 1rem; }
     .column {
       flex: 1;
@@ -16,7 +29,7 @@
       background: #f9f9f9;
       border: 1px solid #ccc;
       border-radius: 8px;
-      min-height: 200px;
+      min-height: 300px;
     }
     .column h2 { margin-top: 0; }
     .card {
@@ -40,7 +53,8 @@
 </head>
 <body>
   <h1>WFH Booking Board</h1>
-  <div id="board"></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="dayContainers"></div>
 
   <script>
     const employees = [{"Name": "Joe Bungey", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Joe-Bungey.png"}, {"Name": "Jeni Jones", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/07/Untitled-design-6.png"}, {"Name": "Phil Boshier", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/38.jpg"}, {"Name": "Daniela Kent", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/02/11.jpg"}, {"Name": "Gregg Raven", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/09/Gregg-Raven.png"}, {"Name": "Oscar Dixon-Barrow", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Oscar-Dixon-Barrow.png"}, {"Name": "Jack Perks", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/08/Headshots-1.png"}, {"Name": "Elaine Connell", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/06/14.jpg"}, {"Name": "Martha Cumiskey", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/07/Headshots-3.png"}, {"Name": "Matt Owen", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/matt-e1747131126274.png"}, {"Name": "Charlotte Berrow", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/Untitled-design-3-e1747750363328.png"}, {"Name": "Hannah Lawry", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/Hannah-Lawry-low-re.png"}, {"Name": "Molly McGuire", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/10/Molly-McGuire.png"}, {"Name": "Ben McKenna-Smith", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/04/Ben-McKenna-Smith-1.png"}, {"Name": "Ben Hackston", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/01/Headshots-2.png"}, {"Name": "Summer Bolitho", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/summer-e1747140054919.png"}];
@@ -60,48 +74,6 @@
       return card;
     }
 
-    function render() {
-      document.getElementById("board").innerHTML = "";
-      days.forEach((day, dayIdx) => {
-        const dayDiv = document.createElement("div");
-        dayDiv.className = "day";
-        const title = document.createElement("h2");
-        title.textContent = day;
-        dayDiv.appendChild(title);
-
-        const cols = document.createElement("div");
-        cols.className = "columns";
-
-        columns.forEach((col) => {
-          const colDiv = document.createElement("div");
-          colDiv.className = "column";
-          colDiv.dataset.day = dayIdx;
-          colDiv.dataset.column = col;
-
-          colDiv.addEventListener("dragover", (e) => e.preventDefault());
-          colDiv.addEventListener("drop", (e) => {
-            const name = e.dataTransfer.getData("text");
-            moveCard(dayIdx, col, name);
-          });
-
-          const colTitle = document.createElement("h2");
-          colTitle.textContent = col;
-          colDiv.appendChild(colTitle);
-
-          const people = (state[dayIdx]?.[col] || []);
-          people.forEach((name) => {
-            const person = employees.find(p => p.Name === name);
-            if (person) colDiv.appendChild(createCard(person));
-          });
-
-          cols.appendChild(colDiv);
-        });
-
-        dayDiv.appendChild(cols);
-        document.getElementById("board").appendChild(dayDiv);
-      });
-    }
-
     function moveCard(day, column, name) {
       state[day] = state[day] || {};
       columns.forEach(col => {
@@ -111,7 +83,7 @@
       if (column === "Working from Home") {
         const wfhCount = (state[day]["Working from Home"] || []).length;
         const alreadyWFH = Object.entries(state).some(([d, cols]) =>
-          parseInt(d) !== day && (cols["Working from Home"] || []).includes(name)
+          parseInt(d) !== parseInt(day) && (cols["Working from Home"] || []).includes(name)
         );
         if (wfhCount >= 3 || alreadyWFH) {
           alert("WFH limit exceeded or already booked this week.");
@@ -125,13 +97,79 @@
       render();
     }
 
-    // Initial setup: everyone starts in Office on Monday
-    employees.forEach(emp => {
-      state[0] = state[0] || {};
-      state[0]["In Office"] = state[0]["In Office"] || [];
-      state[0]["In Office"].push(emp.Name);
-    });
+    function render() {
+      days.forEach((day, dayIdx) => {
+        const container = document.getElementById("day-" + dayIdx);
+        container.innerHTML = "";
+        const cols = document.createElement("div");
+        cols.className = "columns";
 
+        columns.forEach(col => {
+          const colDiv = document.createElement("div");
+          colDiv.className = "column";
+          colDiv.dataset.day = dayIdx;
+          colDiv.dataset.column = col;
+
+          colDiv.addEventListener("dragover", e => e.preventDefault());
+          colDiv.addEventListener("drop", e => {
+            const name = e.dataTransfer.getData("text");
+            moveCard(dayIdx, col, name);
+          });
+
+          const title = document.createElement("h2");
+          title.textContent = col;
+          colDiv.appendChild(title);
+
+          const people = (state[dayIdx]?.[col] || []);
+          people.forEach(name => {
+            const person = employees.find(p => p.Name === name);
+            if (person) colDiv.appendChild(createCard(person));
+          });
+
+          // Fill remaining people into 'In Office' if not already in any column
+          if (col === "In Office") {
+            employees.forEach(person => {
+              const alreadyPlaced = columns.some(c =>
+                (state[dayIdx]?.[c] || []).includes(person.Name)
+              );
+              if (!alreadyPlaced) {
+                if (!state[dayIdx]) state[dayIdx] = {};
+                if (!state[dayIdx][col]) state[dayIdx][col] = [];
+                state[dayIdx][col].push(person.Name);
+              }
+            });
+          }
+
+          cols.appendChild(colDiv);
+        });
+        container.appendChild(cols);
+      });
+    }
+
+    function setupTabs() {
+      const tabBar = document.getElementById("tabs");
+      const container = document.getElementById("dayContainers");
+      days.forEach((day, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = day;
+        btn.className = "tab-button";
+        btn.onclick = () => {
+          document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+          document.querySelectorAll(".day-container").forEach(c => c.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById("day-" + idx).classList.add("active");
+        };
+        tabBar.appendChild(btn);
+
+        const dayDiv = document.createElement("div");
+        dayDiv.className = "day-container";
+        dayDiv.id = "day-" + idx;
+        container.appendChild(dayDiv);
+      });
+      tabBar.firstChild.click(); // auto-select first tab
+    }
+
+    setupTabs();
     render();
   </script>
 </body>
