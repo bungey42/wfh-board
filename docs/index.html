@@ -22,6 +22,9 @@
       margin-top: 0;
     }
     .card {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       padding: 0.5rem;
       margin: 0.5rem 0;
       background: white;
@@ -29,99 +32,416 @@
       border-radius: 4px;
       cursor: grab;
     }
+    .card img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
   </style>
 </head>
 <body>
-  <h1>WFH Booking Board (Interactive Demo)</h1>
-
-  <div id="board"></div>
-
-  <script>
-    const staff = ["Alice", "Bob", "Charlie", "Dana", "Eli", "Frank", "Grace"];
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-    const columns = ["In Office", "Working from Home", "On Annual Leave"];
-
-    const board = document.getElementById("board");
-
-    let state = {};
-
-    days.forEach((day, dayIdx) => {
-      const dayDiv = document.createElement("div");
-      dayDiv.className = "day";
-      const title = document.createElement("h2");
-      title.textContent = day;
-      dayDiv.appendChild(title);
-
-      const cols = document.createElement("div");
-      cols.className = "columns";
-
-      columns.forEach((col) => {
-        const colDiv = document.createElement("div");
-        colDiv.className = "column";
-        colDiv.dataset.day = dayIdx;
-        colDiv.dataset.column = col;
-        colDiv.addEventListener("dragover", (e) => e.preventDefault());
-        colDiv.addEventListener("drop", (e) => {
-          const name = e.dataTransfer.getData("text");
-          moveCard(dayIdx, col, name);
-        });
-
-        const colTitle = document.createElement("h2");
-        colTitle.textContent = col;
-        colDiv.appendChild(colTitle);
-
-        cols.appendChild(colDiv);
-      });
-
-      dayDiv.appendChild(cols);
-      board.appendChild(dayDiv);
-    });
-
-    function moveCard(day, column, name) {
-      state[day] = state[day] || {};
-      columns.forEach((col) => {
-        state[day][col] = (state[day][col] || []).filter((p) => p !== name);
-      });
-
-      if (column === "Working from Home") {
-        const wfhCount = (state[day]["Working from Home"] || []).length;
-        const alreadyWFH = Object.values(state).some(dayData =>
-          (dayData["Working from Home"] || []).includes(name)
-        );
-        if (wfhCount >= 3 || alreadyWFH) {
-          alert("Cannot move: WFH limit reached or already WFH this week.");
-          return;
-        }
-      }
-
-      state[day][column] = state[day][column] || [];
-      state[day][column].push(name);
-      render();
-    }
-
-    function render() {
-      document.querySelectorAll(".column").forEach((col) => {
-        const day = col.dataset.day;
-        const column = col.dataset.column;
-        col.querySelectorAll(".card")?.forEach((el) => el.remove());
-        const cards = (state[day]?.[column] || []).map((name) => {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.draggable = true;
-          card.textContent = name;
-          card.addEventListener("dragstart", (e) => {
-            e.dataTransfer.setData("text", name);
-          });
-          return card;
-        });
-        cards.forEach((c) => col.appendChild(c));
-      });
-    }
-
-    // Initial population
-    staff.forEach((person, idx) => {
-      moveCard(idx % 5, "In Office", person);
-    });
-  </script>
+  <h1>WFH Booking Board</h1>
+<div class="day"><h2>Monday</h2><div class="columns"><div class="column"><h2>In Office</h2>
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Joe-Bungey.png" alt="Joe Bungey" />
+                  <span>Joe Bungey</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/07/Untitled-design-6.png" alt="Jeni Jones" />
+                  <span>Jeni Jones</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/38.jpg" alt="Phil Boshier" />
+                  <span>Phil Boshier</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/02/11.jpg" alt="Daniela Kent" />
+                  <span>Daniela Kent</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/09/Gregg-Raven.png" alt="Gregg Raven" />
+                  <span>Gregg Raven</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Oscar-Dixon-Barrow.png" alt="Oscar Dixon-Barrow" />
+                  <span>Oscar Dixon-Barrow</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/08/Headshots-1.png" alt="Jack Perks" />
+                  <span>Jack Perks</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/06/14.jpg" alt="Elaine Connell" />
+                  <span>Elaine Connell</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/07/Headshots-3.png" alt="Martha Cumiskey" />
+                  <span>Martha Cumiskey</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/matt-e1747131126274.png" alt="Matt Owen" />
+                  <span>Matt Owen</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/Untitled-design-3-e1747750363328.png" alt="Charlotte Berrow" />
+                  <span>Charlotte Berrow</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/Hannah-Lawry-low-re.png" alt="Hannah Lawry" />
+                  <span>Hannah Lawry</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/10/Molly-McGuire.png" alt="Molly McGuire" />
+                  <span>Molly McGuire</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/04/Ben-McKenna-Smith-1.png" alt="Ben McKenna-Smith" />
+                  <span>Ben McKenna-Smith</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/01/Headshots-2.png" alt="Ben Hackston" />
+                  <span>Ben Hackston</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/summer-e1747140054919.png" alt="Summer Bolitho" />
+                  <span>Summer Bolitho</span>
+                </div>
+                </div><div class="column"><h2>Working from Home</h2></div><div class="column"><h2>On Annual Leave</h2></div></div></div><div class="day"><h2>Tuesday</h2><div class="columns"><div class="column"><h2>In Office</h2>
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Joe-Bungey.png" alt="Joe Bungey" />
+                  <span>Joe Bungey</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/07/Untitled-design-6.png" alt="Jeni Jones" />
+                  <span>Jeni Jones</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/38.jpg" alt="Phil Boshier" />
+                  <span>Phil Boshier</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/02/11.jpg" alt="Daniela Kent" />
+                  <span>Daniela Kent</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/09/Gregg-Raven.png" alt="Gregg Raven" />
+                  <span>Gregg Raven</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Oscar-Dixon-Barrow.png" alt="Oscar Dixon-Barrow" />
+                  <span>Oscar Dixon-Barrow</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/08/Headshots-1.png" alt="Jack Perks" />
+                  <span>Jack Perks</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/06/14.jpg" alt="Elaine Connell" />
+                  <span>Elaine Connell</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/07/Headshots-3.png" alt="Martha Cumiskey" />
+                  <span>Martha Cumiskey</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/matt-e1747131126274.png" alt="Matt Owen" />
+                  <span>Matt Owen</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/Untitled-design-3-e1747750363328.png" alt="Charlotte Berrow" />
+                  <span>Charlotte Berrow</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/Hannah-Lawry-low-re.png" alt="Hannah Lawry" />
+                  <span>Hannah Lawry</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/10/Molly-McGuire.png" alt="Molly McGuire" />
+                  <span>Molly McGuire</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/04/Ben-McKenna-Smith-1.png" alt="Ben McKenna-Smith" />
+                  <span>Ben McKenna-Smith</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/01/Headshots-2.png" alt="Ben Hackston" />
+                  <span>Ben Hackston</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/summer-e1747140054919.png" alt="Summer Bolitho" />
+                  <span>Summer Bolitho</span>
+                </div>
+                </div><div class="column"><h2>Working from Home</h2></div><div class="column"><h2>On Annual Leave</h2></div></div></div><div class="day"><h2>Wednesday</h2><div class="columns"><div class="column"><h2>In Office</h2>
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Joe-Bungey.png" alt="Joe Bungey" />
+                  <span>Joe Bungey</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/07/Untitled-design-6.png" alt="Jeni Jones" />
+                  <span>Jeni Jones</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/38.jpg" alt="Phil Boshier" />
+                  <span>Phil Boshier</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/02/11.jpg" alt="Daniela Kent" />
+                  <span>Daniela Kent</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/09/Gregg-Raven.png" alt="Gregg Raven" />
+                  <span>Gregg Raven</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Oscar-Dixon-Barrow.png" alt="Oscar Dixon-Barrow" />
+                  <span>Oscar Dixon-Barrow</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/08/Headshots-1.png" alt="Jack Perks" />
+                  <span>Jack Perks</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/06/14.jpg" alt="Elaine Connell" />
+                  <span>Elaine Connell</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/07/Headshots-3.png" alt="Martha Cumiskey" />
+                  <span>Martha Cumiskey</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/matt-e1747131126274.png" alt="Matt Owen" />
+                  <span>Matt Owen</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/Untitled-design-3-e1747750363328.png" alt="Charlotte Berrow" />
+                  <span>Charlotte Berrow</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/Hannah-Lawry-low-re.png" alt="Hannah Lawry" />
+                  <span>Hannah Lawry</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/10/Molly-McGuire.png" alt="Molly McGuire" />
+                  <span>Molly McGuire</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/04/Ben-McKenna-Smith-1.png" alt="Ben McKenna-Smith" />
+                  <span>Ben McKenna-Smith</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/01/Headshots-2.png" alt="Ben Hackston" />
+                  <span>Ben Hackston</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/summer-e1747140054919.png" alt="Summer Bolitho" />
+                  <span>Summer Bolitho</span>
+                </div>
+                </div><div class="column"><h2>Working from Home</h2></div><div class="column"><h2>On Annual Leave</h2></div></div></div><div class="day"><h2>Thursday</h2><div class="columns"><div class="column"><h2>In Office</h2>
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Joe-Bungey.png" alt="Joe Bungey" />
+                  <span>Joe Bungey</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/07/Untitled-design-6.png" alt="Jeni Jones" />
+                  <span>Jeni Jones</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/38.jpg" alt="Phil Boshier" />
+                  <span>Phil Boshier</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/02/11.jpg" alt="Daniela Kent" />
+                  <span>Daniela Kent</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/09/Gregg-Raven.png" alt="Gregg Raven" />
+                  <span>Gregg Raven</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Oscar-Dixon-Barrow.png" alt="Oscar Dixon-Barrow" />
+                  <span>Oscar Dixon-Barrow</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/08/Headshots-1.png" alt="Jack Perks" />
+                  <span>Jack Perks</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/06/14.jpg" alt="Elaine Connell" />
+                  <span>Elaine Connell</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/07/Headshots-3.png" alt="Martha Cumiskey" />
+                  <span>Martha Cumiskey</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/matt-e1747131126274.png" alt="Matt Owen" />
+                  <span>Matt Owen</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/Untitled-design-3-e1747750363328.png" alt="Charlotte Berrow" />
+                  <span>Charlotte Berrow</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/Hannah-Lawry-low-re.png" alt="Hannah Lawry" />
+                  <span>Hannah Lawry</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/10/Molly-McGuire.png" alt="Molly McGuire" />
+                  <span>Molly McGuire</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/04/Ben-McKenna-Smith-1.png" alt="Ben McKenna-Smith" />
+                  <span>Ben McKenna-Smith</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/01/Headshots-2.png" alt="Ben Hackston" />
+                  <span>Ben Hackston</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/summer-e1747140054919.png" alt="Summer Bolitho" />
+                  <span>Summer Bolitho</span>
+                </div>
+                </div><div class="column"><h2>Working from Home</h2></div><div class="column"><h2>On Annual Leave</h2></div></div></div><div class="day"><h2>Friday</h2><div class="columns"><div class="column"><h2>In Office</h2>
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Joe-Bungey.png" alt="Joe Bungey" />
+                  <span>Joe Bungey</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/07/Untitled-design-6.png" alt="Jeni Jones" />
+                  <span>Jeni Jones</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/38.jpg" alt="Phil Boshier" />
+                  <span>Phil Boshier</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/02/11.jpg" alt="Daniela Kent" />
+                  <span>Daniela Kent</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/09/Gregg-Raven.png" alt="Gregg Raven" />
+                  <span>Gregg Raven</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Oscar-Dixon-Barrow.png" alt="Oscar Dixon-Barrow" />
+                  <span>Oscar Dixon-Barrow</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/08/Headshots-1.png" alt="Jack Perks" />
+                  <span>Jack Perks</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/06/14.jpg" alt="Elaine Connell" />
+                  <span>Elaine Connell</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/07/Headshots-3.png" alt="Martha Cumiskey" />
+                  <span>Martha Cumiskey</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/matt-e1747131126274.png" alt="Matt Owen" />
+                  <span>Matt Owen</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/Untitled-design-3-e1747750363328.png" alt="Charlotte Berrow" />
+                  <span>Charlotte Berrow</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/Hannah-Lawry-low-re.png" alt="Hannah Lawry" />
+                  <span>Hannah Lawry</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/10/Molly-McGuire.png" alt="Molly McGuire" />
+                  <span>Molly McGuire</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2023/04/Ben-McKenna-Smith-1.png" alt="Ben McKenna-Smith" />
+                  <span>Ben McKenna-Smith</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2022/01/Headshots-2.png" alt="Ben Hackston" />
+                  <span>Ben Hackston</span>
+                </div>
+                
+                <div class="card">
+                  <img src="https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/summer-e1747140054919.png" alt="Summer Bolitho" />
+                  <span>Summer Bolitho</span>
+                </div>
+                </div><div class="column"><h2>Working from Home</h2></div><div class="column"><h2>On Annual Leave</h2></div></div></div>
 </body>
 </html>
