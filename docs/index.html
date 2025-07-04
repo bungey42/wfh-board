@@ -4,11 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WFH Kanban Board (Synced, GitHub Pages Compatible)</title>
-  <!-- Firebase App (the core Firebase SDK) -->
+  <title>WFH Booking Board</title>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
   <style>
     body { font-family: sans-serif; padding: 2rem; }
     h1 { margin-bottom: 1rem; }
@@ -53,10 +51,19 @@
       border-radius: 50%;
       object-fit: cover;
     }
+    #message {
+      font-size: 1.2rem;
+      background: #ffefc1;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
   </style>
 </head>
 <body>
-  <h1>WFH Booking Board (Cloud Synced)</h1>
+  <h1>Book Your WFH Day</h1>
+  <div id="message"></div>
   <div class="tabs" id="tabs"></div>
   <div id="dayContainers"></div>
 
@@ -77,51 +84,51 @@
     const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
     const columns = ["In Office", "Working from Home", "On Annual Leave"];
     let state = {};
+    let weekKey = "";
+    let released = false;
+    let bankHoliday = false;
+    let mandatoryOfficeDays = [];
 
-    const boardRef = db.collection("board").doc("current");
+    function getWeekKey() {
+      const today = new Date();
+      today.setDate(today.getDate() + (8 - today.getDay()));
+      const year = today.getFullYear();
+      const week = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const weekNum = getWeekNumber(week);
+      return year + "-W" + String(weekNum).padStart(2, "0");
+    }
 
-    async function loadState() {
-      const docSnap = await boardRef.get();
-      if (docSnap.exists) {
-        state = docSnap.data();
-      } else {
-        initializeState();
-        await boardRef.set(state);
+    function getWeekNumber(d) {
+      d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
+    async function loadBoard() {
+      weekKey = getWeekKey();
+      const docSnap = await db.collection("boards").doc(weekKey).get();
+      if (!docSnap.exists) {
+        document.getElementById("message").textContent = "❌ Bookings are not open yet. Please check back later.";
+        return;
       }
+      const data = docSnap.data();
+      released = data.released;
+      if (!released) {
+        document.getElementById("message").textContent = "❌ Bookings have not been released yet.";
+        return;
+      }
+      bankHoliday = data.bankHoliday || false;
+      mandatoryOfficeDays = data.mandatoryOfficeDays || [];
+      state = data.state || {};
+
+      document.getElementById("message").textContent = bankHoliday
+        ? "⚠️ No WFH allowed this week due to a bank holiday."
+        : "✅ You may book one WFH day for the upcoming week.";
+
+      setupTabs();
       render();
-    }
-
-    function initializeState() {
-      days.forEach((_, dayIdx) => {
-        state[dayIdx] = {
-          "In Office": employees.map(e => e.Name),
-          "Working from Home": [],
-          "On Annual Leave": []
-        };
-      });
-    }
-
-    async function moveCard(day, column, name) {
-      state[day] = state[day] || {};
-      columns.forEach(col => {
-        state[day][col] = (state[day][col] || []).filter(p => p !== name);
-      });
-
-      if (column === "Working from Home") {
-        const wfhCount = (state[day]["Working from Home"] || []).length;
-        const alreadyWFH = Object.entries(state).some(([d, cols]) =>
-          parseInt(d) !== parseInt(day) && (cols["Working from Home"] || []).includes(name)
-        );
-        if (wfhCount >= 3 || alreadyWFH) {
-          alert("WFH limit exceeded or already booked this week.");
-          render();
-          return;
-        }
-      }
-
-      state[day][column] = state[day][column] || [];
-      state[day][column].push(name);
-      await boardRef.set(state);
     }
 
     function createCard(person, dayIdx, column) {
@@ -129,11 +136,71 @@
       card.className = "card";
       card.draggable = true;
       card.dataset.name = person.Name;
-      card.innerHTML = `<img src='${person['Photo URL']}' alt='${person.Name}'><span>${person.Name}</span>`;
+      card.innerHTML = `<img src='${person["Photo URL"]}' alt='${person.Name}'><span>${person.Name}</span>`;
       card.addEventListener("dragstart", (e) => {
         e.dataTransfer.setData("text", person.Name);
       });
       return card;
+    }
+
+    async function moveCard(day, column, name) {
+      if (bankHoliday || mandatoryOfficeDays.includes(day)) {
+        alert("❌ You cannot book WFH on a restricted day.");
+        return;
+      }
+      const wfhCount = (state[day]["Working from Home"] || []).length;
+      const alreadyWFH = Object.values(state).some(dayData =>
+        (dayData["Working from Home"] || []).includes(name)
+      );
+      if (column === "Working from Home") {
+        const onLeave = Object.values(state).some(dayData =>
+          (dayData["On Annual Leave"] || []).includes(name)
+        );
+        if (onLeave) {
+          alert("❌ You cannot book WFH in a week where you are on annual leave.");
+          return;
+        }
+        if (wfhCount >= 3) {
+          alert("⚠️ Only 3 people can work from home per day.");
+          return;
+        }
+        if (alreadyWFH) {
+          alert("⚠️ You can only book one WFH day per week.");
+          return;
+        }
+      }
+      columns.forEach(col => {
+        state[day][col] = (state[day][col] || []).filter(p => p !== name);
+      });
+      state[day][column] = state[day][column] || [];
+      state[day][column].push(name);
+      await db.collection("boards").doc(weekKey).update({ state });
+      render();
+    }
+
+    function setupTabs() {
+      const tabBar = document.getElementById("tabs");
+      const container = document.getElementById("dayContainers");
+      tabBar.innerHTML = "";
+      container.innerHTML = "";
+      days.forEach((day, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = day;
+        btn.className = "tab-button";
+        btn.onclick = () => {
+          document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+          document.querySelectorAll(".day-container").forEach(c => c.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById("day-" + idx).classList.add("active");
+        };
+        tabBar.appendChild(btn);
+
+        const dayDiv = document.createElement("div");
+        dayDiv.className = "day-container";
+        dayDiv.id = "day-" + idx;
+        container.appendChild(dayDiv);
+      });
+      tabBar.firstChild.click();
     }
 
     function render() {
@@ -172,38 +239,7 @@
       });
     }
 
-    function setupTabs() {
-      const tabBar = document.getElementById("tabs");
-      const container = document.getElementById("dayContainers");
-      days.forEach((day, idx) => {
-        const btn = document.createElement("button");
-        btn.textContent = day;
-        btn.className = "tab-button";
-        btn.onclick = () => {
-          document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
-          document.querySelectorAll(".day-container").forEach(c => c.classList.remove("active"));
-          btn.classList.add("active");
-          document.getElementById("day-" + idx).classList.add("active");
-        };
-        tabBar.appendChild(btn);
-
-        const dayDiv = document.createElement("div");
-        dayDiv.className = "day-container";
-        dayDiv.id = "day-" + idx;
-        container.appendChild(dayDiv);
-      });
-      tabBar.firstChild.click();
-    }
-
-    boardRef.onSnapshot(docSnap => {
-      if (docSnap.exists) {
-        state = docSnap.data();
-        render();
-      }
-    });
-
-    setupTabs();
-    loadState();
+    loadBoard();
   </script>
 </body>
 </html>
