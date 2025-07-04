@@ -62,6 +62,16 @@
     const columns = ["In Office", "Working from Home", "On Annual Leave"];
     let state = {};
 
+    // Ensure everyone is in 'In Office' per day by default
+    function initializeState() {
+      days.forEach((_, dayIdx) => {
+        state[dayIdx] = {};
+        state[dayIdx]["In Office"] = employees.map(e => e.Name);
+        state[dayIdx]["Working from Home"] = [];
+        state[dayIdx]["On Annual Leave"] = [];
+      });
+    }
+
     function createCard(person) {
       const card = document.createElement("div");
       card.className = "card";
@@ -126,20 +136,6 @@
             if (person) colDiv.appendChild(createCard(person));
           });
 
-          // Fill remaining people into 'In Office' if not already in any column
-          if (col === "In Office") {
-            employees.forEach(person => {
-              const alreadyPlaced = columns.some(c =>
-                (state[dayIdx]?.[c] || []).includes(person.Name)
-              );
-              if (!alreadyPlaced) {
-                if (!state[dayIdx]) state[dayIdx] = {};
-                if (!state[dayIdx][col]) state[dayIdx][col] = [];
-                state[dayIdx][col].push(person.Name);
-              }
-            });
-          }
-
           cols.appendChild(colDiv);
         });
         container.appendChild(cols);
@@ -169,6 +165,7 @@
       tabBar.firstChild.click(); // auto-select first tab
     }
 
+    initializeState();
     setupTabs();
     render();
   </script>
