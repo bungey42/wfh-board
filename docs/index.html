@@ -239,7 +239,127 @@
       });
     }
 
-    loadBoard();
+    
+    const today = new Date();
+    const nextMonday = new Date();
+    nextMonday.setDate(today.getDate() + (8 - today.getDay()));
+    const currentMonday = new Date();
+    currentMonday.setDate(today.getDate() - (today.getDay() - 1));
+
+    const weekKeys = [
+      getWeekKeyFromDate(currentMonday),
+      getWeekKeyFromDate(nextMonday)
+    ];
+
+    let currentData = null;
+    let nextData = null;
+
+    async function loadBothWeeks() {
+      const [currentSnap, nextSnap] = await Promise.all([
+        db.collection("boards").doc(weekKeys[0]).get(),
+        db.collection("boards").doc(weekKeys[1]).get()
+      ]);
+      currentData = currentSnap.exists ? currentSnap.data() : null;
+      nextData = nextSnap.exists ? nextSnap.data() : null;
+
+      const container = document.getElementById("dayContainers");
+      container.innerHTML = "";
+
+      if (currentData) {
+        createWeekSection("Current Week (Read-Only)", currentData, false);
+      }
+
+      if (nextData && nextData.released) {
+        createWeekSection("Next Week (Editable)", nextData, true);
+        document.getElementById("message").textContent =
+          nextData.bankHoliday
+            ? "⚠️ No WFH allowed next week due to a bank holiday."
+            : "✅ You may book one WFH day for the upcoming week.";
+      } else {
+        document.getElementById("message").textContent =
+          "⏳ Bookings for next week are not open yet.";
+      }
+    }
+
+    function createWeekSection(title, weekData, editable) {
+      const section = document.createElement("div");
+      const heading = document.createElement("h2");
+      heading.textContent = title;
+      section.appendChild(heading);
+      const tabs = document.createElement("div");
+      tabs.className = "tabs";
+      const tabContent = document.createElement("div");
+      tabContent.id = title.replace(/\s/g, "") + "Tabs";
+      section.appendChild(tabs);
+      section.appendChild(tabContent);
+      document.getElementById("dayContainers").appendChild(section);
+
+      days.forEach((day, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = day;
+        btn.className = "tab-button";
+        btn.onclick = () => {
+          tabContent.querySelectorAll(".day-container").forEach(c => c.classList.remove("active"));
+          tabContent.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById(title.replace(/\s/g, "") + "-day-" + idx).classList.add("active");
+        };
+        tabs.appendChild(btn);
+
+        const dayDiv = document.createElement("div");
+        dayDiv.className = "day-container";
+        dayDiv.id = title.replace(/\s/g, "") + "-day-" + idx;
+        tabContent.appendChild(dayDiv);
+
+        const cols = document.createElement("div");
+        cols.className = "columns";
+        columns.forEach(col => {
+          const colDiv = document.createElement("div");
+          colDiv.className = "column";
+          colDiv.dataset.day = idx;
+          colDiv.dataset.column = col;
+          colDiv.dataset.editable = editable;
+
+          if (editable) {
+            colDiv.addEventListener("dragover", e => e.preventDefault());
+            colDiv.addEventListener("drop", e => {
+              const name = e.dataTransfer.getData("text");
+              moveCard(idx, col, name, weekData, weekKeys[1]);
+            });
+          }
+
+          const titleEl = document.createElement("h2");
+          titleEl.textContent = col;
+          colDiv.appendChild(titleEl);
+
+          const people = (weekData[idx]?.[col] || []);
+          people.forEach(name => {
+            const person = employees.find(p => p.Name === name);
+            if (person) {
+              const card = createCard(person, idx, col);
+              if (!editable) card.draggable = false;
+              colDiv.appendChild(card);
+            }
+          });
+
+          cols.appendChild(colDiv);
+        });
+        dayDiv.appendChild(cols);
+      });
+      tabs.firstChild.click();
+    }
+
+    function getWeekKeyFromDate(dateObj) {
+      const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return d.getUTCFullYear() + "-W" + String(weekNum).padStart(2, "0");
+    }
+
+    loadBothWeeks();
+    
   </script>
 </body>
 </html>
