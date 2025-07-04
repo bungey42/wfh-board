@@ -282,6 +282,8 @@
     }
 
     function createWeekSection(title, weekData, editable) {
+  if (!weekData || Object.keys(weekData).length === 0) return;
+
       const section = document.createElement("div");
       const heading = document.createElement("h2");
       heading.textContent = title;
@@ -300,7 +302,7 @@
         btn.className = "tab-button";
         btn.onclick = () => {
           tabContent.querySelectorAll(".day-container").forEach(c => c.classList.remove("active"));
-          tabContent.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+          tabs.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
           document.getElementById(title.replace(/\s/g, "") + "-day-" + idx).classList.add("active");
         };
@@ -332,7 +334,7 @@
           titleEl.textContent = col;
           colDiv.appendChild(titleEl);
 
-          const people = (weekData[idx]?.[col] || []);
+          const people = (weekData[idx] && weekData[idx][col]) ? weekData[idx][col] : [];
           people.forEach(name => {
             const person = employees.find(p => p.Name === name);
             if (person) {
