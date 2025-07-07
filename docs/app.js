@@ -1,4 +1,6 @@
 
+document.addEventListener("DOMContentLoaded", function () {
+
 const firebaseConfig = {
   apiKey: "AIzaSyCxHyL3-ecLuVjGrM2HjEbfAV7Kgh-Ufs8",
   authDomain: "wfh-board.firebaseapp.com",
@@ -209,3 +211,5 @@ async function loadBoards() {
 
 weekToggle.addEventListener("change", loadBoards);
 loadBoards();
+
+});
