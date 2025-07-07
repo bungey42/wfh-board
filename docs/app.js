@@ -1,5 +1,4 @@
 
-
 const firebaseConfig = {
   apiKey: "AIzaSyCxHyL3-ecLuVjGrM2HjEbfAV7Kgh-Ufs8",
   authDomain: "wfh-board.firebaseapp.com",
@@ -12,12 +11,12 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-
 const employees = [{"Name": "Joe Bungey", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Joe-Bungey.png"}, {"Name": "Jeni Jones", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/07/Untitled-design-6.png"}, {"Name": "Phil Boshier", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/38.jpg"}, {"Name": "Daniela Kent", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/02/11.jpg"}, {"Name": "Gregg Raven", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/09/Gregg-Raven.png"}, {"Name": "Oscar Dixon-Barrow", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Oscar-Dixon-Barrow.png"}, {"Name": "Jack Perks", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/08/Headshots-1.png"}, {"Name": "Elaine Connell", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/06/14.jpg"}, {"Name": "Martha Cumiskey", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/07/Headshots-3.png"}, {"Name": "Matt Owen", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/matt-e1747131126274.png"}, {"Name": "Charlotte Berrow", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/Untitled-design-3-e1747750363328.png"}, {"Name": "Hannah Lawry", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/Hannah-Lawry-low-re.png"}, {"Name": "Molly McGuire", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/10/Molly-McGuire.png"}, {"Name": "Ben McKenna-Smith", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/04/Ben-McKenna-Smith-1.png"}, {"Name": "Ben Hackston", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/01/Headshots-2.png"}, {"Name": "Summer Bolitho", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/summer-e1747140054919.png"}];
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const columns = ["In Office", "Working from Home", "On Annual Leave"];
-let nextData = null;
-let nextWeekState = {};
+
+const weekToggle = document.getElementById("weekToggle");
+const messageEl = document.getElementById("message");
 
 const today = new Date();
 const nextMonday = new Date();
@@ -30,36 +29,9 @@ const weekKeys = [
   getWeekKeyFromDate(nextMonday)
 ];
 
-async function loadBothWeeks() {
-  const [currentSnap, nextSnap] = await Promise.all([
-    db.collection("boards").doc(weekKeys[0]).get(),
-    db.collection("boards").doc(weekKeys[1]).get()
-  ]);
-
-  const currentData = currentSnap.exists ? currentSnap.data() : null;
-  nextData = nextSnap.exists ? nextSnap.data() : null;
-
-  if (currentData) {
-    const section = createWeekSection("Current Week (Read-Only)", currentData.state, false);
-    document.getElementById("currentWeekContainer").appendChild(section);
-  }
-
-  if (nextData && nextData.released) {
-    nextWeekState = nextData.state || initEmptyState();
-    const section = createWeekSection("Next Week (Editable)", nextWeekState, true);
-    document.getElementById("nextWeekContainer").appendChild(section);
-
-    document.getElementById("message").textContent =
-      nextData.bankHoliday
-        ? "⚠️ No WFH allowed next week due to a bank holiday."
-        : "✅ You may book one WFH day for the upcoming week.";
-  } else {
-    document.getElementById("message").textContent =
-      "⏳ Bookings for next week are not open yet.";
-  }
-
-  document.getElementById("weekToggle").dispatchEvent(new Event("change"));
-}
+let currentWeekData = null;
+let nextWeekData = null;
+let nextWeekState = null;
 
 function getWeekKeyFromDate(dateObj) {
   const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
@@ -70,28 +42,84 @@ function getWeekKeyFromDate(dateObj) {
   return d.getUTCFullYear() + "-W" + String(weekNum).padStart(2, "0");
 }
 
-function initEmptyState() {
-  const state = {};
-  for (let i = 0; i < 5; i++) {
-    state[i] = {
-      "In Office": employees.map(e => e.Name),
-      "Working from Home": [],
-      "On Annual Leave": []
-    };
-  }
-  return state;
-}
-
-function createCard(person) {
+function createCard(person, editable, dayIdx, colName) {
   const card = document.createElement("div");
   card.className = "card";
-  card.draggable = true;
+  card.draggable = editable;
   card.dataset.name = person.Name;
   card.innerHTML = `<img src="${person["Photo URL"]}" alt="${person.Name}"><span>${person.Name}</span>`;
-  card.addEventListener("dragstart", (e) => {
-    e.dataTransfer.setData("text", person.Name);
-  });
+  if (editable) {
+    card.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("text/plain", person.Name);
+    });
+  }
   return card;
+}
+
+function buildWeekTabs(containerId, weekData, editable) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  const tabs = document.createElement("div");
+  tabs.className = "tabs";
+  container.appendChild(tabs);
+
+  const tabContent = document.createElement("div");
+  container.appendChild(tabContent);
+
+  days.forEach((day, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "tab-button";
+    btn.textContent = day;
+    btn.addEventListener("click", () => {
+      tabContent.querySelectorAll(".day-container").forEach(d => d.classList.remove("active"));
+      tabs.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(`${containerId}-day-${idx}`).classList.add("active");
+    });
+    tabs.appendChild(btn);
+
+    const dayDiv = document.createElement("div");
+    dayDiv.className = "day-container";
+    dayDiv.id = `${containerId}-day-${idx}`;
+
+    const columnsDiv = document.createElement("div");
+    columnsDiv.className = "columns";
+
+    columns.forEach(col => {
+      const colDiv = document.createElement("div");
+      colDiv.className = "column";
+      colDiv.dataset.day = idx;
+      colDiv.dataset.column = col;
+
+      const titleEl = document.createElement("h2");
+      titleEl.textContent = col;
+      colDiv.appendChild(titleEl);
+
+      const names = weekData?.[idx]?.[col] || [];
+      names.forEach(name => {
+        const person = employees.find(p => p.Name === name);
+        if (person) {
+          colDiv.appendChild(createCard(person, editable, idx, col));
+        }
+      });
+
+      if (editable) {
+        colDiv.addEventListener("dragover", e => e.preventDefault());
+        colDiv.addEventListener("drop", (e) => {
+          const name = e.dataTransfer.getData("text/plain");
+          moveCard(idx, col, name);
+        });
+      }
+
+      columnsDiv.appendChild(colDiv);
+    });
+
+    dayDiv.appendChild(columnsDiv);
+    tabContent.appendChild(dayDiv);
+  });
+
+  tabs.firstChild?.click();
 }
 
 function moveCard(day, column, name) {
@@ -102,7 +130,7 @@ function moveCard(day, column, name) {
     alert("❌ You cannot book WFH in a week where you are on annual leave.");
     return;
   }
-  if (nextData.bankHoliday || (nextData.mandatoryOfficeDays || []).includes(day)) {
+  if (nextWeekData.bankHoliday || (nextWeekData.mandatoryOfficeDays || []).includes(day)) {
     alert("❌ You cannot book WFH on a restricted day.");
     return;
   }
@@ -121,82 +149,43 @@ function moveCard(day, column, name) {
     }
   }
 
-  columns.forEach(col => {
-    nextWeekState[day][col] = (nextWeekState[day][col] || []).filter(p => p !== name);
+  columns.forEach(c => {
+    nextWeekState[day][c] = (nextWeekState[day][c] || []).filter(n => n !== name);
   });
   nextWeekState[day][column].push(name);
   db.collection("boards").doc(weekKeys[1]).update({ state: nextWeekState });
-  loadBothWeeks();
+  loadBoards();
 }
 
-function createWeekSection(title, weekState, editable) {
-  const container = document.createElement("div");
-  const tabs = document.createElement("div");
-  tabs.className = "tabs";
-  container.appendChild(tabs);
+async function loadBoards() {
+  const [currentSnap, nextSnap] = await Promise.all([
+    db.collection("boards").doc(weekKeys[0]).get(),
+    db.collection("boards").doc(weekKeys[1]).get()
+  ]);
 
-  const tabContent = document.createElement("div");
-  container.appendChild(tabContent);
+  currentWeekData = currentSnap.exists ? currentSnap.data() : null;
+  nextWeekData = nextSnap.exists ? nextSnap.data() : null;
+  nextWeekState = nextWeekData?.state || null;
 
-  days.forEach((day, idx) => {
-    const btn = document.createElement("button");
-    btn.textContent = day;
-    btn.className = "tab-button";
-    btn.onclick = () => {
-      tabContent.querySelectorAll(".day-container").forEach(c => c.classList.remove("active"));
-      tabs.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      document.getElementById(title + "-day-" + idx).classList.add("active");
-    };
-    tabs.appendChild(btn);
-
-    const dayDiv = document.createElement("div");
-    dayDiv.className = "day-container";
-    dayDiv.id = title + "-day-" + idx;
-    const cols = document.createElement("div");
-    cols.className = "columns";
-
-    columns.forEach(col => {
-      const colDiv = document.createElement("div");
-      colDiv.className = "column";
-      colDiv.dataset.day = idx;
-      colDiv.dataset.column = col;
-
-      if (editable) {
-        colDiv.addEventListener("dragover", e => e.preventDefault());
-        colDiv.addEventListener("drop", e => {
-          const name = e.dataTransfer.getData("text");
-          moveCard(idx, col, name);
-        });
-      }
-
-      const titleEl = document.createElement("h2");
-      titleEl.textContent = col;
-      colDiv.appendChild(titleEl);
-
-      const people = (weekState?.[idx]?.[col] || []);
-      people.forEach(name => {
-        const person = employees.find(p => p.Name === name);
-        if (person) {
-          const card = createCard(person);
-          if (!editable) card.draggable = false;
-          colDiv.appendChild(card);
-        }
-      });
-
-      cols.appendChild(colDiv);
-    });
-    dayDiv.appendChild(cols);
-    tabContent.appendChild(dayDiv);
-  });
-  tabs.firstChild.click();
-  return container;
+  if (weekToggle.value === "current") {
+    document.getElementById("currentWeekContainer").style.display = "block";
+    document.getElementById("nextWeekContainer").style.display = "none";
+    buildWeekTabs("currentWeekContainer", currentWeekData?.state, false);
+    messageEl.textContent = "";
+  } else {
+    document.getElementById("currentWeekContainer").style.display = "none";
+    document.getElementById("nextWeekContainer").style.display = "block";
+    if (nextWeekData?.released) {
+      buildWeekTabs("nextWeekContainer", nextWeekState, true);
+      messageEl.textContent = nextWeekData.bankHoliday ?
+        "⚠️ No WFH allowed next week due to a bank holiday." :
+        "✅ You may book one WFH day for next week.";
+    } else {
+      document.getElementById("nextWeekContainer").innerHTML = "";
+      messageEl.textContent = "⏳ Next week is not yet released.";
+    }
+  }
 }
 
-document.getElementById("weekToggle").addEventListener("change", (e) => {
-  const showCurrent = e.target.value === "current";
-  document.getElementById("currentWeekContainer").style.display = showCurrent ? "block" : "none";
-  document.getElementById("nextWeekContainer").style.display = showCurrent ? "none" : "block";
-});
-
-loadBothWeeks();
+weekToggle.addEventListener("change", loadBoards);
+loadBoards();

@@ -5,10 +5,24 @@
   <title>WFH Board</title>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script defer src="app.js"></script>
   <style>
     body { font-family: sans-serif; padding: 2rem; }
-    h2 { margin-top: 2rem; }
-    .columns { display: flex; gap: 1rem; margin-bottom: 2rem; }
+    .tabs { display: flex; gap: 1rem; margin: 1rem 0; }
+    .tab-button {
+      padding: 0.5rem 1rem;
+      background: #eee;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .tab-button.active {
+      background: #ddd;
+      font-weight: bold;
+    }
+    .day-container { display: none; }
+    .day-container.active { display: block; }
+    .columns { display: flex; gap: 1rem; }
     .column {
       flex: 1;
       padding: 1rem;
@@ -17,7 +31,7 @@
       border-radius: 8px;
       min-height: 300px;
     }
-    .column h3 { margin-top: 0; }
+    .column h2 { margin-top: 0; }
     .card {
       display: flex;
       align-items: center;
@@ -39,165 +53,15 @@
 </head>
 <body>
   <h1>WFH Booking Board</h1>
-  <p id="message"></p>
-  <div id="boardContainer"></div>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCxHyL3-ecLuVjGrM2HjEbfAV7Kgh-Ufs8",
-      authDomain: "wfh-board.firebaseapp.com",
-      projectId: "wfh-board",
-      storageBucket: "wfh-board.appspot.com",
-      messagingSenderId: "204510362340",
-      appId: "1:204510362340:web:77f93cb517cbbee2f70af1"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    const employees = [{"Name": "Joe Bungey", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Joe-Bungey.png"}, {"Name": "Jeni Jones", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/07/Untitled-design-6.png"}, {"Name": "Phil Boshier", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/38.jpg"}, {"Name": "Daniela Kent", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/02/11.jpg"}, {"Name": "Gregg Raven", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/09/Gregg-Raven.png"}, {"Name": "Oscar Dixon-Barrow", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/03/Oscar-Dixon-Barrow.png"}, {"Name": "Jack Perks", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/08/Headshots-1.png"}, {"Name": "Elaine Connell", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/06/14.jpg"}, {"Name": "Martha Cumiskey", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/07/Headshots-3.png"}, {"Name": "Matt Owen", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/matt-e1747131126274.png"}, {"Name": "Charlotte Berrow", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/Untitled-design-3-e1747750363328.png"}, {"Name": "Hannah Lawry", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2020/11/Hannah-Lawry-low-re.png"}, {"Name": "Molly McGuire", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/10/Molly-McGuire.png"}, {"Name": "Ben McKenna-Smith", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2023/04/Ben-McKenna-Smith-1.png"}, {"Name": "Ben Hackston", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2022/01/Headshots-2.png"}, {"Name": "Summer Bolitho", "Photo URL": "https://www.mustardjobs.co.uk/wp-content/uploads/2025/05/summer-e1747140054919.png"}];
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-    const columns = ["In Office", "Working from Home", "On Annual Leave"];
-    const boardContainer = document.getElementById("boardContainer");
-
-    const today = new Date();
-    const nextMonday = new Date();
-    nextMonday.setDate(today.getDate() + (8 - today.getDay()));
-    const currentMonday = new Date();
-    currentMonday.setDate(today.getDate() - (today.getDay() - 1));
-
-    const weekKeys = [
-      getWeekKeyFromDate(currentMonday),
-      getWeekKeyFromDate(nextMonday)
-    ];
-
-    function getWeekKeyFromDate(dateObj) {
-      const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
-      const dayNum = d.getUTCDay() || 7;
-      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-      const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-      return d.getUTCFullYear() + "-W" + String(weekNum).padStart(2, "0");
-    }
-
-    let nextData = null;
-    let nextWeekState = null;
-
-    async function loadBoard() {
-      const [currentSnap, nextSnap] = await Promise.all([
-        db.collection("boards").doc(weekKeys[0]).get(),
-        db.collection("boards").doc(weekKeys[1]).get()
-      ]);
-
-      const currentData = currentSnap.exists ? currentSnap.data() : null;
-      nextData = nextSnap.exists ? nextSnap.data() : null;
-
-      boardContainer.innerHTML = "";
-
-      if (currentData) {
-        const heading = document.createElement("h2");
-        heading.textContent = "This Week (Read-Only)";
-        boardContainer.appendChild(heading);
-        buildDays(currentData.state, false);
-      }
-
-      if (nextData && nextData.released) {
-        const heading = document.createElement("h2");
-        heading.textContent = "Next Week (Editable)";
-        boardContainer.appendChild(heading);
-        nextWeekState = nextData.state;
-        buildDays(nextWeekState, true);
-        document.getElementById("message").textContent = nextData.bankHoliday ?
-          "⚠️ No WFH allowed next week due to a bank holiday." :
-          "✅ You may book one WFH day for next week.";
-      } else {
-        document.getElementById("message").textContent = "⏳ Next week not yet released.";
-      }
-    }
-
-    function buildDays(weekData, editable) {
-      days.forEach((day, dayIdx) => {
-        const dayLabel = document.createElement("h3");
-        dayLabel.textContent = day;
-        boardContainer.appendChild(dayLabel);
-
-        const columnsDiv = document.createElement("div");
-        columnsDiv.className = "columns";
-
-        columns.forEach(col => {
-          const colDiv = document.createElement("div");
-          colDiv.className = "column";
-          colDiv.dataset.day = dayIdx;
-          colDiv.dataset.column = col;
-
-          if (editable) {
-            colDiv.addEventListener("dragover", e => e.preventDefault());
-            colDiv.addEventListener("drop", e => {
-              const name = e.dataTransfer.getData("text");
-              moveCard(dayIdx, col, name);
-            });
-          }
-
-          const colTitle = document.createElement("h3");
-          colTitle.textContent = col;
-          colDiv.appendChild(colTitle);
-
-          const names = weekData?.[dayIdx]?.[col] || [];
-          names.forEach(name => {
-            const person = employees.find(p => p.Name === name);
-            if (person) {
-              const card = document.createElement("div");
-              card.className = "card";
-              card.draggable = editable;
-              card.dataset.name = person.Name;
-              card.innerHTML = `<img src='${person["Photo URL"]}'><span>${person.Name}</span>`;
-              card.addEventListener("dragstart", e => {
-                e.dataTransfer.setData("text", person.Name);
-              });
-              colDiv.appendChild(card);
-            }
-          });
-
-          columnsDiv.appendChild(colDiv);
-        });
-
-        boardContainer.appendChild(columnsDiv);
-      });
-    }
-
-    function moveCard(day, column, name) {
-      const onLeave = Object.values(nextWeekState).some(dayData =>
-        (dayData["On Annual Leave"] || []).includes(name)
-      );
-      if (onLeave) {
-        alert("❌ You cannot book WFH in a week where you are on annual leave.");
-        return;
-      }
-      if (nextData.bankHoliday || (nextData.mandatoryOfficeDays || []).includes(day)) {
-        alert("❌ You cannot book WFH on a restricted day.");
-        return;
-      }
-      const wfhCount = (nextWeekState[day]["Working from Home"] || []).length;
-      const alreadyWFH = Object.values(nextWeekState).some(dayData =>
-        (dayData["Working from Home"] || []).includes(name)
-      );
-      if (column === "Working from Home") {
-        if (wfhCount >= 3) {
-          alert("⚠️ Only 3 people can work from home per day.");
-          return;
-        }
-        if (alreadyWFH) {
-          alert("⚠️ You can only book one WFH day per week.");
-          return;
-        }
-      }
-      columns.forEach(c => {
-        nextWeekState[day][c] = (nextWeekState[day][c] || []).filter(n => n !== name);
-      });
-      nextWeekState[day][column].push(name);
-      db.collection("boards").doc(weekKeys[1]).update({ state: nextWeekState });
-      loadBoard();
-    }
-
-    loadBoard();
-  </script>
+  <div style="margin-bottom: 1rem;">
+    <label for="weekToggle">Select Week:</label>
+    <select id="weekToggle">
+      <option value="current">This Week</option>
+      <option value="next">Next Week</option>
+    </select>
+  </div>
+  <div id="message" style="margin-bottom: 1rem;"></div>
+  <div id="currentWeekContainer" style="display:none;"></div>
+  <div id="nextWeekContainer" style="display:none;"></div>
 </body>
 </html>
