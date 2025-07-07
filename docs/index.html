@@ -49,10 +49,37 @@
       border-radius: 50%;
       object-fit: cover;
     }
+    .legend {
+      background: #f0f8ff;
+      border-left: 6px solid #00bcd4;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border-radius: 6px;
+    }
+    .legend h3 {
+      margin-top: 0;
+    }
+    .legend ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
   </style>
 </head>
 <body>
   <h1>WFH Booking Board</h1>
+
+  <div class="legend">
+    <h3>🏡 WFH Booking Rules:</h3>
+    <ul>
+      <li>✅ You can book <strong>1 WFH day per week</strong>.</li>
+      <li>⛔ <strong>No WFH</strong> is allowed during bank holiday weeks.</li>
+      <li>☀️ If you are on <strong>annual leave</strong> at all during a week, you cannot book WFH.</li>
+      <li>🏢 <strong>At least 60% of staff</strong> must be in the office each day for WFH to be allowed.</li>
+      <li>🏠 <strong>Max 3 people</strong> can book WFH on any given day.</li>
+      <li>🤒 <strong>Sick Leave</strong> can only be set by an admin.</li>
+    </ul>
+  </div>
+
   <div style="margin-bottom: 1rem;">
     <label for="weekToggle">Select Week:</label>
     <select id="weekToggle">
@@ -60,6 +87,7 @@
       <option value="next">Next Week</option>
     </select>
   </div>
+
   <div id="message" style="margin-bottom: 1rem;"></div>
   <div id="currentWeekContainer" style="display:none;"></div>
   <div id="nextWeekContainer" style="display:none;"></div>
