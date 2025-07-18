@@ -48,24 +48,31 @@ document.addEventListener("DOMContentLoaded", function () {
     return typeof entry === "object" && entry !== null ? entry.name : entry;
   }
 
-  function createCard(name, editable) {
-    const person = employees.find(p => p.Name === name);
-    const card = document.createElement("div");
-    card.className = "card";
-    card.draggable = editable;
-    card.dataset.name = name;
-    if (person) {
-      card.innerHTML = `<img src="${person["Photo URL"]}" alt="${person.Name}"><span>${person.Name}</span>`;
-    } else {
-      card.textContent = name;
-    }
-    if (editable) {
-      card.addEventListener("dragstart", (e) => {
-        e.dataTransfer.setData("text/plain", name);
-      });
-    }
-    return card;
+function createCard(entry, editable) {
+  const name = typeof entry === "object" ? entry.name : entry;
+  const half = typeof entry === "object" && entry.half ? ` (${entry.half})` : "";
+
+  const person = employees.find(p => p.Name === name);
+  const card = document.createElement("div");
+  card.className = "card";
+  card.draggable = editable;
+  card.dataset.name = name;
+
+  if (person) {
+    card.innerHTML = `<img src="${person["Photo URL"]}" alt="${person.Name}"><span>${person.Name}${half}</span>`;
+  } else {
+    card.textContent = name + half;
   }
+
+  if (editable) {
+    card.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("text/plain", name);
+    });
+  }
+
+  return card;
+}
+
 
   function buildWeekTabs(containerId, weekData, editable) {
     const container = document.getElementById(containerId);
