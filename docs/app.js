@@ -1,4 +1,4 @@
-// ✅ Full app.js with drag-and-drop for next week, half-day labels, and booking rules
+// ✅ Full app.js with drag-and-drop for next week, half-day labels, booking rules, and wfhAbility logic
 
 document.addEventListener("DOMContentLoaded", function () {
   const firebaseConfig = {
@@ -13,16 +13,17 @@ document.addEventListener("DOMContentLoaded", function () {
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-let employees = [];
+  let employees = [];
 
-function loadEmployees() {
-  return db.collection("employees")
-    .where("active", "==", true)
-    .get()
-    .then(snapshot => {
-      employees = snapshot.docs.map(doc => doc.data());
-    });
-}
+  function loadEmployees() {
+    return db.collection("employees")
+      .where("active", "==", true)
+      .get()
+      .then(snapshot => {
+        employees = snapshot.docs.map(doc => doc.data());
+      });
+  }
+
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
   const columns = ["In Office", "Working from Home", "On Annual Leave", "Sick Leave"];
   const columnLabels = {
@@ -70,12 +71,11 @@ function loadEmployees() {
     card.draggable = editable;
     card.dataset.name = name;
 
-if (person) {
-  card.innerHTML = `<img src="${person.photoUrl}" alt="${person.name}"><span>${person.name}${half}</span>`;
-} else {
-  card.textContent = name + half;
-}
-
+    if (person) {
+      card.innerHTML = `<img src="${person.photoUrl}" alt="${person.name}"><span>${person.name}${half}</span>`;
+    } else {
+      card.textContent = name + half;
+    }
 
     if (editable) {
       card.addEventListener("dragstart", (e) => {
@@ -150,6 +150,9 @@ if (person) {
   }
 
   function moveCard(day, column, name) {
+    const person = employees.find(p => p.name === name);
+    const ability = person?.wfhAbility || "normal";
+
     const onLeave = Object.values(nextWeekState).some(d =>
       (d["On Annual Leave"] || []).some(e => extractName(e) === name)
     );
@@ -162,9 +165,13 @@ if (person) {
       .reduce((sum, col) => sum + (nextWeekState[day][col] || []).length, 0);
     const percentInOffice = (totalEmployees - notInOffice) / totalEmployees;
 
-    if (column === "Working from Home") {
+    if (column === "Working from Home" && ability !== "any") {
       if (nextWeekData.bankHoliday || (nextWeekData.mandatoryOfficeDays || []).includes(day)) {
         alert("❌ You cannot book WFH on a restricted day.");
+        return;
+      }
+      if (ability === "none") {
+        alert("❌ This user is not permitted to work from home.");
         return;
       }
       if (onLeave) {
@@ -185,20 +192,15 @@ if (person) {
       }
     }
 
-    // Remove from all columns
     columns.forEach(c => {
       nextWeekState[day][c] = (nextWeekState[day][c] || []).filter(entry => extractName(entry) !== name);
     });
 
-    // Add to new column
     nextWeekState[day][column] = nextWeekState[day][column] || [];
     nextWeekState[day][column].push(name);
 
     db.collection("boards").doc(weekKeys[1]).update({ state: nextWeekState });
-loadEmployees().then(() => {
-  loadBoards();
-});
-
+    loadBoards();
   }
 
   async function loadBoards() {
@@ -235,10 +237,6 @@ loadEmployees().then(() => {
     }
   }
 
-weekToggle.addEventListener("change", () => {
+  weekToggle.addEventListener("change", loadBoards);
   loadEmployees().then(loadBoards);
-});
-
-loadEmployees().then(loadBoards);
-
 });
