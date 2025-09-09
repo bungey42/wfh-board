@@ -64,14 +64,14 @@ function loadEmployees() {
     const name = typeof entry === "object" ? entry.name : entry;
     const half = typeof entry === "object" && entry.half ? ` (${entry.half})` : "";
 
-    const person = employees.find(p => p.Name === name);
+    const person = employees.find(p => p.name === name);
     const card = document.createElement("div");
     card.className = "card";
     card.draggable = editable;
     card.dataset.name = name;
 
 if (person) {
-  card.innerHTML = `<img src="${person.photoUrl}" alt="${person.Name}"><span>${person.Name}${half}</span>`;
+  card.innerHTML = `<img src="${person.photoUrl}" alt="${person.name}"><span>${person.name}${half}</span>`;
 } else {
   card.textContent = name + half;
 }
