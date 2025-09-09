@@ -70,11 +70,12 @@ function loadEmployees() {
     card.draggable = editable;
     card.dataset.name = name;
 
-    if (person) {
-      card.innerHTML = `<img src="${person["Photo URL"]}" alt="${person.Name}"><span>${person.Name}${half}</span>`;
-    } else {
-      card.textContent = name + half;
-    }
+if (person) {
+  card.innerHTML = `<img src="${person.photoUrl}" alt="${person.Name}"><span>${person.Name}${half}</span>`;
+} else {
+  card.textContent = name + half;
+}
+
 
     if (editable) {
       card.addEventListener("dragstart", (e) => {
