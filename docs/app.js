@@ -235,6 +235,10 @@ loadEmployees().then(() => {
     }
   }
 
-  weekToggle.addEventListener("change", loadBoards);
-  loadBoards();
+weekToggle.addEventListener("change", () => {
+  loadEmployees().then(loadBoards);
+});
+
+loadEmployees().then(loadBoards);
+
 });
