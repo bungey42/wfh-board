@@ -159,7 +159,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const alreadyWFH = Object.values(nextWeekState).some(d =>
       (d["Working from Home"] || []).some(e => extractName(e) === name)
     );
-    const wfhCount = (nextWeekState[day]["Working from Home"] || []).length;
+    const wfhNormalCount = (nextWeekState[day]["Working from Home"] || []).filter(e => {
+      const empName = extractName(e);
+      const emp = employees.find(p => p.name === empName);
+      return emp?.wfhAbility === "normal";
+    }).length;
     const totalEmployees = employees.length;
     const notInOffice = ["On Annual Leave", "Working from Home", "Sick Leave"]
       .reduce((sum, col) => sum + (nextWeekState[day][col] || []).length, 0);
@@ -182,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("⚠️ You can only book one WFH day per week.");
         return;
       }
-      if (wfhCount >= 3) {
+      if (ability === "normal" && wfhNormalCount >= 3) {
         alert("⚠️ Only 3 people can work from home per day.");
         return;
       }
