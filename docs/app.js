@@ -1,4 +1,4 @@
-// ✅ Full app.js with drag-and-drop for next week, half-day labels, booking rules, and wfhAbility logic
+// ✅ Full app.js with drag-and-drop for next week, half-day labels, booking rules, wfhAbility logic + tab persistence
 
 document.addEventListener("DOMContentLoaded", function () {
   const firebaseConfig = {
@@ -47,6 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentWeekData = null;
   let nextWeekData = null;
   let nextWeekState = null;
+  let nextWeekDayIndex = 0; // ✅ Track current day tab for nextWeek view
 
   function getWeekKey(dateObj) {
     const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
@@ -86,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return card;
   }
 
-  function buildWeekTabs(containerId, weekData, editable) {
+  function buildWeekTabs(containerId, weekData, editable, activeDayIndex = 0) {
     const container = document.getElementById(containerId);
     container.innerHTML = "";
 
@@ -106,6 +107,11 @@ document.addEventListener("DOMContentLoaded", function () {
         tabs.querySelectorAll("button").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         document.getElementById(`${containerId}-day-${idx}`).classList.add("active");
+
+        // ✅ Track selected tab for next week view
+        if (containerId === "nextWeekContainer") {
+          nextWeekDayIndex = idx;
+        }
       });
       tabs.appendChild(btn);
 
@@ -146,7 +152,8 @@ document.addEventListener("DOMContentLoaded", function () {
       tabContent.appendChild(dayDiv);
     });
 
-    tabs.firstChild?.click();
+    // ✅ Reopen the last selected tab (default: Monday)
+    tabs.children[activeDayIndex]?.click();
   }
 
   function moveCard(day, column, name) {
@@ -230,7 +237,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     } else {
       if (nextWeekData?.released) {
-        buildWeekTabs("nextWeekContainer", nextWeekState, true);
+        buildWeekTabs("nextWeekContainer", nextWeekState, true, nextWeekDayIndex); // ✅ persist day
         messageEl.textContent = nextWeekData.bankHoliday
           ? "⚠️ No WFH allowed next week due to a bank holiday."
           : "✅ You may book one WFH day for next week.";
